@@ -10,9 +10,16 @@ import (
 var textUnmarshalerType = reflect.TypeOf([]encoding.TextUnmarshaler{}).Elem()
 var argUnmarshalerType = reflect.TypeOf([]ArgUnmarshaler{}).Elem()
 
+func canParseWrapped(t reflect.Type) bool {
+	if t.Implements(argUnmarshalerType) || reflect.PtrTo(t).Implements(argUnmarshalerType) {
+		return true
+	}
+	return scalar.CanParse(t)
+}
+
 // canParse returns true if the type can be parsed from a string
 func canParse(t reflect.Type) (parseable, boolean, multiple bool) {
-	parseable = scalar.CanParse(t)
+	parseable = canParseWrapped(t)
 	boolean = isBoolean(t)
 	if parseable {
 		return
@@ -28,7 +35,7 @@ func canParse(t reflect.Type) (parseable, boolean, multiple bool) {
 		t = t.Elem()
 	}
 
-	parseable = scalar.CanParse(t)
+	parseable = canParseWrapped(t)
 	boolean = isBoolean(t)
 	if parseable {
 		return
@@ -39,7 +46,7 @@ func canParse(t reflect.Type) (parseable, boolean, multiple bool) {
 		t = t.Elem()
 	}
 
-	parseable = scalar.CanParse(t)
+	parseable = canParseWrapped(t)
 	boolean = isBoolean(t)
 	if parseable {
 		return

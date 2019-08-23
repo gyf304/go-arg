@@ -406,7 +406,7 @@ func (p *Parser) captureEnvVars(specs []*spec, wasPresent map[*spec]bool) error 
 				)
 			}
 		} else {
-			if err := scalar.ParseValue(p.val(spec.dest), value); err != nil {
+			if err := parseValue(p.val(spec.dest), value); err != nil {
 				return fmt.Errorf("error processing environment variable %s: %v", spec.env, err)
 			}
 		}
@@ -542,7 +542,7 @@ func (p *Parser) process(args []string) error {
 			i++
 		}
 
-		err := scalar.ParseValue(p.val(spec.dest), value)
+		err := parseValue(p.val(spec.dest), value)
 		if err != nil {
 			return fmt.Errorf("error processing %s: %v", arg, err)
 		}
@@ -564,7 +564,7 @@ func (p *Parser) process(args []string) error {
 			}
 			positionals = nil
 		} else {
-			err := scalar.ParseValue(p.val(spec.dest), positionals[0])
+			err := parseValue(p.val(spec.dest), positionals[0])
 			if err != nil {
 				return fmt.Errorf("error processing %s: %v", spec.long, err)
 			}
@@ -595,7 +595,7 @@ func nextIsNumeric(t reflect.Type, s string) bool {
 		return nextIsNumeric(t.Elem(), s)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		v := reflect.New(t)
-		err := scalar.ParseValue(v, s)
+		err := parseValue(v, s)
 		return err == nil
 	default:
 		return false
