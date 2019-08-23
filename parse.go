@@ -632,9 +632,27 @@ func (p *Parser) val(dest path) reflect.Value {
 }
 
 func parseValue(v reflect.Value, s string) error {
+	// If we have a nil pointer then allocate a new object
+	if v.Kind() == reflect.Ptr && v.IsNil() {
+		if !v.CanSet() {
+			return scalar.ParseValue(v, s)
+		}
+
+		v.Set(reflect.New(v.Type().Elem()))
+	}
+
+	// If it implements encoding.TextUnmarshaler then use that
 	if scalar, ok := v.Interface().(ArgUnmarshaler); ok {
 		return scalar.UnmarshalArg([]byte(s))
 	}
+	// If it's a value instead of a pointer, check that we can unmarshal it
+	// via TextUnmarshaler as well
+	if v.CanAddr() {
+		if scalar, ok := v.Addr().Interface().(ArgUnmarshaler); ok {
+			return scalar.UnmarshalArg([]byte(s))
+		}
+	}
+
 	return scalar.ParseValue(v, s)
 }
 
