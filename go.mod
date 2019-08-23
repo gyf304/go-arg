@@ -1,4 +1,4 @@
-module github.com/alexflint/go-arg
+module github.com/gyf304/go-arg
 
 require (
 	github.com/alexflint/go-scalar v1.0.0
