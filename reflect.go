@@ -8,6 +8,7 @@ import (
 )
 
 var textUnmarshalerType = reflect.TypeOf([]encoding.TextUnmarshaler{}).Elem()
+var argUnmarshalerType = reflect.TypeOf([]ArgUnmarshaler{}).Elem()
 
 // canParse returns true if the type can be parsed from a string
 func canParse(t reflect.Type) (parseable, boolean, multiple bool) {
@@ -50,6 +51,8 @@ func canParse(t reflect.Type) (parseable, boolean, multiple bool) {
 // isBoolean returns true if the type can be parsed from a single string
 func isBoolean(t reflect.Type) bool {
 	switch {
+	case t.Implements(argUnmarshalerType):
+		return false
 	case t.Implements(textUnmarshalerType):
 		return false
 	case t.Kind() == reflect.Bool:

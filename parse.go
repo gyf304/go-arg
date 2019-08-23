@@ -22,6 +22,11 @@ type path struct {
 	fields []string // sequence of struct field names to traverse
 }
 
+// ArgUnmarshaler is TextUnmarshaler but with a different method name
+type ArgUnmarshaler interface {
+	UnmarshalArg(text []byte) error
+}
+
 // String gets a string representation of the given path
 func (p path) String() string {
 	if len(p.fields) == 0 {
@@ -626,6 +631,13 @@ func (p *Parser) val(dest path) reflect.Value {
 	return v
 }
 
+func parseValue(v reflect.Value, s string) error {
+	if scalar, ok := v.Interface().(ArgUnmarshaler); ok {
+		return scalar.UnmarshalArg([]byte(s))
+	}
+	return scalar.ParseValue(v, s)
+}
+
 // parse a value as the appropriate type and store it in the struct
 func setSlice(dest reflect.Value, values []string, trunc bool) error {
 	if !dest.CanSet() {
@@ -634,7 +646,7 @@ func setSlice(dest reflect.Value, values []string, trunc bool) error {
 
 	var ptr bool
 	elem := dest.Type().Elem()
-	if elem.Kind() == reflect.Ptr && !elem.Implements(textUnmarshalerType) {
+	if elem.Kind() == reflect.Ptr && !elem.Implements(textUnmarshalerType) && !elem.Implements(argUnmarshalerType) {
 		ptr = true
 		elem = elem.Elem()
 	}
@@ -646,7 +658,7 @@ func setSlice(dest reflect.Value, values []string, trunc bool) error {
 
 	for _, s := range values {
 		v := reflect.New(elem)
-		if err := scalar.ParseValue(v.Elem(), s); err != nil {
+		if err := parseValue(v.Elem(), s); err != nil {
 			return err
 		}
 		if !ptr {
